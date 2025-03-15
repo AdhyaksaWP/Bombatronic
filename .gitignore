@@ -1,0 +1,8 @@
+# Ignore environment variables
+.env
+
+# Ignore yolov5 train folder
+./yolov5train
+
+# Ignore dataset folder
+./Fire-Dataset-for-YOLOv8-10

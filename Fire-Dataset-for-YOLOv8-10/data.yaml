@@ -1,0 +1,12 @@
+names:
+- fire
+nc: 1
+roboflow:
+  license: CC BY 4.0
+  project: fire-dataset-for-yolov8
+  url: https://universe.roboflow.com/aj-garcia-736tc/fire-dataset-for-yolov8/dataset/10
+  version: 10
+  workspace: aj-garcia-736tc
+test: ../test/images
+train: ../../Fire-Dataset-for-YOLOv8-10/train/images
+val: ../../Fire-Dataset-for-YOLOv8-10/valid/images
