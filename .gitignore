@@ -2,7 +2,7 @@
 .env
 
 # Ignore yolov5 train folder
-./yolov5train
+runs/
 
 # Ignore dataset folder
-./Fire-Dataset-for-YOLOv8-10
+Fire-Dataset-for-YOLOv8-10/
