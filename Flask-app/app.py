@@ -2,6 +2,7 @@ import os
 import re
 import threading
 import http.client
+import requests
 import json
 
 from flask import Flask, jsonify, request
@@ -13,6 +14,7 @@ from fire_inference import Fire_Inference
 from llm_invoking import LLM_Invoking
 from mqtt import MQTT
 from location import Location
+from db import DB
 
 
 load_dotenv(dotenv_path=Path('.env'))
@@ -23,6 +25,7 @@ fire_detector = Fire_Inference()
 chatbot = LLM_Invoking()
 mqtt = MQTT()
 location = Location()
+db = DB()
 
 camera_thread = threading.Thread(target=fire_detector.camera, daemon=True)
 mqtt_thread = threading.Thread(target=mqtt.start, daemon=True)
@@ -34,6 +37,7 @@ mqtt_thread = threading.Thread(target=mqtt.start, daemon=True)
 def vision():
     try:
         yaw, pitch = fire_detector.inference()
+        requests.get("http://127.0.0.1:5000/api/call")
 
         return jsonify({
             "yaw": yaw,
@@ -104,6 +108,15 @@ def call():
     except Exception as e:
         print(f"Error happened on server side: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
+
+@app.route('/api/fetch_db', methods=["GET"])
+def fetch_db():
+    current_dict = db.fetch_db()
+    if "Error" in current_dict:
+        return jsonify(current_dict), 500
+    else:
+        print(current_dict)
+        return jsonify(current_dict), 200
 
 # mqtt_thread.start()
 # camera_thread.start()

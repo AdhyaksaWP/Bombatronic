@@ -12,3 +12,7 @@ datasets/
 
 .vscode/
 Flask-app/__pycache__/
+
+runs/
+weights/
+Weights/
