@@ -1,0 +1,14 @@
+# Ignore environment variables
+Flask-app/.env
+
+# Ignore yolov5 train folder
+AI/runs/
+
+# Ignore dataset folder
+Fire-Dataset-for-YOLOv8-10/
+
+# Ignore dataset folder for training
+datasets/
+
+.vscode/
+Flask-app/__pycache__/

@@ -1,0 +1,11 @@
+ultralytics==8.3.91 
+langchain==0.3.21
+opencv-python==4.11.0.86
+flask==3.1.0
+langchain_google_genai==2.0.10 
+pymongo==4.11.2
+paho-mqtt==2.1.0
+python-dotenv==1.0.1
+langchain_community==0.3.20
+geopy==2.4.1
+geocoder==1.38.1
