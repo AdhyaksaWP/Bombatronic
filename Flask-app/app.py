@@ -14,7 +14,7 @@ from fire_inference import Fire_Inference
 from llm_invoking import LLM_Invoking
 from mqtt import MQTT
 from location import Location
-from db import DB
+# from db import DB
 
 
 load_dotenv(dotenv_path=Path('.env'))
@@ -23,14 +23,12 @@ app = Flask(__name__)
 
 fire_detector = Fire_Inference()
 chatbot = LLM_Invoking()
-mqtt = MQTT()
+# mqtt = MQTT()
 location = Location()
-db = DB()
+# db = DB()
 
 camera_thread = threading.Thread(target=fire_detector.camera, daemon=True)
-mqtt_thread = threading.Thread(target=mqtt.start, daemon=True)
-
-
+# mqtt_thread = threading.Thread(target=mqtt.start, daemon=True)
 # print("FLASK APP INITIALIZED")
 
 @app.route('/api/vision', methods=['GET'])
@@ -56,6 +54,7 @@ def llm():
         print(data)
 
         rag_state = chatbot.is_rag_needed(data)
+        print("RAG State: ", rag_state)
 
         key_and_metadata = {
             "air": "Air-Quality-Factors",
@@ -64,6 +63,7 @@ def llm():
         }
 
         input_metadata = [md for key, md in key_and_metadata.items() if re.search(key, data.lower())]
+        print("Metadata: ", input_metadata)
 
         response = chatbot.chatbot_response(data, rag_state, input_metadata)
         return jsonify({"answer": response}), 200
@@ -109,14 +109,14 @@ def call():
         print(f"Error happened on server side: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
-@app.route('/api/fetch_db', methods=["GET"])
-def fetch_db():
-    current_dict = db.fetch_db()
-    if "Error" in current_dict:
-        return jsonify(current_dict), 500
-    else:
-        print(current_dict)
-        return jsonify(current_dict), 200
+# @app.route('/api/fetch_db', methods=["GET"])
+# def fetch_db():
+#     current_dict = db.fetch_db()
+#     if "Error" in current_dict:
+#         return jsonify(current_dict), 500
+#     else:
+#         print(current_dict)
+#         return jsonify(current_dict), 200
 
 # mqtt_thread.start()
 # camera_thread.start()

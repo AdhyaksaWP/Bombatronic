@@ -55,7 +55,7 @@ class LLM_Invoking():
         ])
         
         chain = prompt | self.__llm | self.__output_parser
-        if rag_state == "yes":
+        if rag_state == "yes" and input_metadata != []:
             print(input_metadata[0], type(input_metadata[0]))
             retrieved_docs = self.__vector_store.similarity_search(
                 query=input_text,
@@ -64,6 +64,8 @@ class LLM_Invoking():
             )
             print(retrieved_docs)
             context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+        else:
+            context = ""
 
         response = chain.invoke({"input": input_text, "context": context})
 
