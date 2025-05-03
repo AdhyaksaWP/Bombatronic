@@ -5,9 +5,9 @@ from ultralytics import YOLO
 
 class Fire_Inference():
     def __init__(self):
-        self.__url = 'http://192.168.133.180/cam-hi.jpg'
-        self.__width = 800
-        self.__height = 600
+        self.__url = 'http://192.168.194.180/cam-lo.jpg'
+        self.__width = 320
+        self.__height = 240
         # self.__serial = serial.Serial('/dev/ttyUSB0', baudrate=115200)
         self.__model = YOLO('./output/yolo_model.pt')
         self.__yaw_start_angle = 90 
