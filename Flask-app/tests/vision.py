@@ -1,17 +1,16 @@
-import json
-import time
 import cv2
 import urllib.request
 import numpy as np
 from ultralytics import YOLO
 
 class Fire_Inference():
+
     def __init__(self):
         self.__url = 'http://192.168.170.120/cam-lo.jpg'
         self.__width = 320
         self.__height = 240
         # self.__serial = serial.Serial('/dev/ttyUSB0', baudrate=115200)
-        self.__model = YOLO('./output/yolo_model.pt')
+        self.__model = YOLO('../output/yolo_model.pt')
         self.__yaw_start_angle = 90 
         self.__pitch_start_angle = 150
         self.__cur_yaw = self.__yaw_start_angle
@@ -20,42 +19,28 @@ class Fire_Inference():
         self.frame = None
         self.running = True
 
-
-    def set_url(self, url_json):
-        # Parse JSON string if it's not already a dict
-        if isinstance(url_json, str):
-            url_data = json.loads(url_json)
-        else:
-            url_data = url_json
-
-        # Extract and clean the URL
-        raw_ip = url_data["url"].strip()  # removes \r, \n, spaces
-        cam_url = f"http://{raw_ip}/cam-lo.jpg"
-        
-        print(f"[Fire_Inference] Camera URL updated to: {cam_url}")
-        self.__url = cam_url
-
-
     def camera(self):
         while self.running:
-            # try:
-            if not self.__url:
-                time.sleep(0.1)
-                continue
+            try:
+                img_resp = urllib.request.urlopen(self.__url)
+                imgnp = np.array(bytearray(img_resp.read()), dtype=np.uint8)
+                self.frame = cv2.imdecode(imgnp, -1)
 
-            img_resp = urllib.request.urlopen(self.__url)
-            imgnp = np.array(bytearray(img_resp.read()), dtype=np.uint8)
-            self.frame = cv2.imdecode(imgnp, -1)
+                # Draw crosshairs
+                cv2.line(self.frame, (self.__width // 2, 0), (self.__width // 2, self.__height), (0, 0, 255), 2)
+                cv2.line(self.frame, (0, self.__height // 2), (self.__width, self.__height // 2), (0, 0, 255), 2)
 
-            cv2.line(self.frame, (self.__width//2, 0), (self.__width//2, self.__height), (0, 0, 255), 5)
-            cv2.line(self.frame, (0, self.__height//2), (self.__width, self.__height//2), (0, 0, 255), 5)
+                # Perform inference and possibly update angles
+                self.inference()
 
-            cv2.imshow("Camera Frame", self.frame)
+                # Show the frame with visual guides
+                cv2.imshow("Camera Frame", self.frame)
 
-            if cv2.waitKey(1) == ord('q'):
-                break
-            # except Exception as e:
-            #     # print(f"Camera error: {e}")
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    self.running = False
+                    break
+            except Exception as e:
+                print(f"Camera error: {e}")
 
         cv2.destroyAllWindows()
     
@@ -70,7 +55,7 @@ class Fire_Inference():
 
             for box in boxes:
                 confidence = box.conf[0].item()
-                if confidence > 0.1:
+                if confidence > 0.52:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     x_center, y_center, w, h = map(int, box.xywh[0])
 
@@ -113,3 +98,5 @@ class Fire_Inference():
 
         return int(yaw_angle), int(pitch_angle)
     
+instance = Fire_Inference()
+instance.camera()

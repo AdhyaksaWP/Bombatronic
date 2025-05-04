@@ -24,7 +24,7 @@ CORS(app)
 
 fire_detector = Fire_Inference()
 chatbot = LLM_Invoking()
-mqtt = MQTT()
+mqtt = MQTT(fire_detector)
 location = Location()
 db = DB()
 
@@ -36,7 +36,9 @@ mqtt_thread = threading.Thread(target=mqtt.start, daemon=True)
 def vision():
     try:
         yaw, pitch = fire_detector.inference()
-        requests.get("http://127.0.0.1:5000/api/call")
+
+        # Call
+        # requests.get("http://127.0.0.1:5000/api/call")
 
         return jsonify({
             "yaw": yaw,
