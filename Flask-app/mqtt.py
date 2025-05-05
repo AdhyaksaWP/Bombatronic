@@ -93,9 +93,9 @@ class MQTT():
             self.current_data["MQ135"] = round(ppm_mq135, 2)
 
             # Log
-            print(f"DHT11 - Temp : {self.current_data['Temp']}, Hum : {self.current_data['Hum']}")
-            print(f"ADC MQ7: {adc_mq7} → V: {volt_mq7:.3f} V → RS: {rs_mq7:.2f} → RS/R0: {ratio_mq7:.2f} → CO: {ppm_mq7:.2f} ppm")
-            print(f"ADC MQ135: {adc_mq135} → V: {volt_mq135:.3f} V → RS: {rs_mq135:.2f} → RS/R0: {ratio_mq135:.2f} → CO₂: {ppm_mq135:.2f} ppm")
+            # print(f"DHT11 - Temp : {self.current_data['Temp']}, Hum : {self.current_data['Hum']}")
+            # print(f"ADC MQ7: {adc_mq7} → V: {volt_mq7:.3f} V → RS: {rs_mq7:.2f} → RS/R0: {ratio_mq7:.2f} → CO: {ppm_mq7:.2f} ppm")
+            # print(f"ADC MQ135: {adc_mq135} → V: {volt_mq135:.3f} V → RS: {rs_mq135:.2f} → RS/R0: {ratio_mq135:.2f} → CO₂: {ppm_mq135:.2f} ppm")
 
         except (KeyError, ZeroDivisionError, TypeError) as e:
             print(f"[PPM Conversion Error]: {e}")
@@ -115,9 +115,12 @@ class MQTT():
             data = msg.payload.decode()
 
             data = re.sub(r'NaN', '0', data, flags=re.IGNORECASE)
-            # print(f"Received data: {data}")
+
+            print(f"Received data: {data}")
             try:
                 self.current_data = json.loads(data)
+                self.current_data["status"] = 1
+                print(f"Received data: {self.current_data}")
 
                 # Run the convert to ppm method
                 self.__convert_to_ppm()

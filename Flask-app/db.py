@@ -36,10 +36,10 @@ class DB():
             }
         else:
             x = df['timestamp'].dt.strftime("%H:%M:%S") if 'timestamp' in df.columns else list(range(len(df)))
-            y1 = df["MQ7"] if "MQ7" in df else [0]*len(x)
-            y2 = df["MQ135"] if "MQ135" in df else [0]*len(x)
-            y3 = df["Temp"] if "Temp" in df else [0]*len(x)
-            y4 = df["Hum"] if "Hum" in df else [0]*len(x)
+            y1 = df["MQ7"].fillna(0) if "MQ7" in df else [0]*len(x)
+            y2 = df["MQ135"].fillna(0) if "MQ135" in df else [0]*len(x)
+            y3 = df["Temp"].fillna(0) if "Temp" in df else [0]*len(x)
+            y4 = df["Hum"].fillna(0) if "Hum" in df else [0]*len(x)
 
 
             return {

@@ -7,7 +7,7 @@ from ultralytics import YOLO
 
 class Fire_Inference():
     def __init__(self):
-        self.__url = 'http://192.168.170.120/cam-lo.jpg'
+        self.__url = 'http://192.168.187.120/cam-lo.jpg'
         self.__width = 320
         self.__height = 240
         # self.__serial = serial.Serial('/dev/ttyUSB0', baudrate=115200)
@@ -70,7 +70,7 @@ class Fire_Inference():
 
             for box in boxes:
                 confidence = box.conf[0].item()
-                if confidence > 0.1:
+                if confidence > 0.01:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     x_center, y_center, w, h = map(int, box.xywh[0])
 

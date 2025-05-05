@@ -38,7 +38,7 @@ def vision():
         yaw, pitch = fire_detector.inference()
 
         # Call
-        # requests.get("http://127.0.0.1:5000/api/call")
+        requests.get("http://127.0.0.1:5000/api/call")
 
         return jsonify({
             "yaw": yaw,
@@ -80,18 +80,14 @@ def call():
     try:
         address = location.get_location()
 
-        conn = http.client.HTTPSConnection("4ez2vn.api.infobip.com")
+        conn = http.client.HTTPSConnection("8kq6x9.api.infobip.com")
         payload = json.dumps({
             "messages": [
                 {
                     "destinations": [{"to":f'{os.getenv("PHONE_NUMBER")}'}],
                     "from": "38515507799",
-                    "language": "en",
-                    "text": f"Fire detected at {address}",
-                    "voice": {
-                        "name": "Joanna",
-                        "gender": "female"
-                    }
+                    "language": "id",
+                    "text": f"Api terdeteksi di {address}",
                 }
             ]
         })
