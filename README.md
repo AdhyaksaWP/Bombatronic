@@ -1,4 +1,4 @@
-# Bombatronic by Symbiot
+# Bombatronic by SymbIoT
 
 This repository contains the core components of the **Bombatronic** project, developed by Team Symbiot. It includes:
 
