@@ -1,100 +1,118 @@
-#include <WebServer.h>
 #include <WiFi.h>
 #include <esp32cam.h>
- 
+#include <WebServer.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+
+// WiFi Credentials
 const char* ssid = "UGM eduroam";
 const char* password = "moyf7667";
- 
-WebServer server(80);
- 
-static auto loRes = esp32cam::Resolution::find(320, 240);
-static auto midRes = esp32cam::Resolution::find(350, 530);
-static auto hiRes = esp32cam::Resolution::find(800, 600);
 
-unsigned long start_time = 0;
+// MQTT Configuration
+const char* mqtt_broker = "broker.emqx.io";
+const char* mqtt_client_id = "sic6_cam_module";
+const char* mqtt_topic_pub_cam = "/UNI544/ADHYAKSAWARUNAPUTRO/cam_url";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+WebServer server(80);
+
+// Set resolution to 320x240
+static auto loRes = esp32cam::Resolution::find(320, 240);
+
+unsigned long lastPublishTime = 0;
 
 void serveJpg()
 {
   auto frame = esp32cam::capture();
   if (frame == nullptr) {
-    // Serial.println("CAPTURE FAIL");
     server.send(503, "", "");
     return;
   }
-  // Serial.printf("CAPTURE OK %dx%d %db\n", frame->getWidth(), frame->getHeight(),
-                // static_cast<int>(frame->size()));
- 
   server.setContentLength(frame->size());
   server.send(200, "image/jpeg");
   WiFiClient client = server.client();
   frame->writeTo(client);
 }
- 
-void handleJpgLo()
+
+void handleCam()
 {
-  if (!esp32cam::Camera.changeResolution(loRes)) {
-    // Serial.println("SET-LO-RES FAIL");
-  }
+  esp32cam::Camera.changeResolution(loRes);
   serveJpg();
 }
- 
-void handleJpgHi()
-{
-  if (!esp32cam::Camera.changeResolution(hiRes)) {
-    // Serial.println("SET-HI-RES FAIL");
+
+void setupWiFi() {
+  Serial.print("Connecting to WiFi...");
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
   }
-  serveJpg();
+  Serial.println("Connected to WiFi!");
+  Serial.println(WiFi.localIP());
 }
- 
-void handleJpgMid()
-{
-  if (!esp32cam::Camera.changeResolution(midRes)) {
-    // Serial.println("SET-MID-RES FAIL");
+
+void setupMQTT() {
+  client.setServer(mqtt_broker, 1883);
+  while (!client.connected()) {
+    Serial.print("Connecting to MQTT...");
+    if (client.connect(mqtt_client_id)) {
+      // Serial.println("Connected to MQTT!");
+    } else {
+      Serial.print("Failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" Trying again in 5 seconds...");
+      delay(5000);
+    }
   }
-  serveJpg();
 }
- 
- 
-void  setup(){
-  Serial.begin(9600);
-  // Serial.println();
+
+void publishCamUrl() {
+  DynamicJsonDocument doc(256);
+  String url = "http://" + WiFi.localIP().toString() + "/cam-lo.jpg";
+  doc["url"] = url;
+
+  char payload[256];
+  serializeJson(doc, payload);
+  client.publish(mqtt_topic_pub_cam, payload);
+}
+
+void setup() {
+  Serial.begin(115200);
+
   {
     using namespace esp32cam;
     Config cfg;
     cfg.setPins(pins::AiThinker);
-    cfg.setResolution(hiRes);
+    cfg.setResolution(loRes); // Use 320x240 resolution
     cfg.setBufferCount(2);
     cfg.setJpeg(80);
- 
-    bool ok = Camera.begin(cfg);
-    // Serial.println(ok ? "CAMERA OK" : "CAMERA FAIL");
+
+    if (!Camera.begin(cfg)) {
+      Serial.println("CAMERA INIT FAIL");
+      while (1);
+    }
   }
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    // Serial.print(".");
-  }
-  // Serial.print("http://");
-  Serial.println(WiFi.localIP());
-  start_time = millis();
-  // Serial.println("  /cam-lo.jpg");
-  // Serial.println("  /cam-hi.jpg");
-  // Serial.println("  /cam-mid.jpg");
- 
-  server.on("/cam-lo.jpg", handleJpgLo);
-  server.on("/cam-hi.jpg", handleJpgHi);
-  server.on("/cam-mid.jpg", handleJpgMid);
- 
+
+  setupWiFi();
+  setupMQTT();
+
+  server.on("/cam-lo.jpg", handleCam);
   server.begin();
+
+  publishCamUrl(); // Publish once at boot
 }
- 
-void loop()
-{
+
+void loop() {
+  if (!client.connected()) {
+    setupMQTT();
+  }
+  client.loop();
   server.handleClient();
 
-  // Send to ESP32 serial every 5 seconds
-  if (millis() - start_time >= 5000){
-    Serial.println(WiFi.localIP());
-    start_time = millis();
+  // Optional: Re-publish URL every 10 seconds
+  if (millis() - lastPublishTime > 10000) {
+    publishCamUrl();
+    lastPublishTime = millis();
   }
 }

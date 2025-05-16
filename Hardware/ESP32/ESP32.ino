@@ -172,7 +172,7 @@ void sendUrl() {
 
 void setup() {
   Serial.begin(115200);
-  Serial2.begin(9600, SERIAL_8N1, UART_RX_PIN, UART_TX_PIN);
+  // Serial2.begin(9600, SERIAL_8N1, UART_RX_PIN, UART_TX_PIN);
 
   Wire.begin();
   ads.begin();
@@ -185,7 +185,7 @@ void setup() {
   servoPitch.attach(SERVO_PITCH_PIN);
 
   servoYaw.write(90);
-  servoPitch.write(150);
+  servoPitch.write(180);
   
   setupWiFi();
   setupMQTT();
@@ -198,21 +198,36 @@ void loop() {
   }
   client.loop();
   readSensors();
-  sendUrl();
-  
-  if ((cur_yaw != prev_yaw) || (cur_pitch != prev_pitch)){
+  // sendUrl();
+
+  // Check if new yaw/pitch were received
+  if ((cur_yaw != prev_yaw) || (cur_pitch != prev_pitch)) {
+    // Move to detected angles
     servoYaw.write(cur_yaw);
     servoPitch.write(cur_pitch);
-    delay(500);
+    delay(500); // Let servos reach position
+
+    // Spray action
     digitalWrite(RELAY_PIN, LOW);
-    delay(2000);
-  }
-  else {
+    delay(6000); // Spray duration
+    digitalWrite(RELAY_PIN, HIGH);
+
+    // Reset back to origin
+    servoYaw.write(90);
+    servoPitch.write(180);
+    delay(500); // Give time to return
+
+    // Update both current and previous to default
+    cur_yaw = 90;
+    cur_pitch = 180;
+    prev_yaw = 90;
+    prev_pitch = 180;
+
+    Serial.println("Spray complete. Resetting to default position.");
+  } else {
     digitalWrite(RELAY_PIN, HIGH);
     delay(500);
   }
 
-  prev_yaw = cur_yaw;
-  prev_pitch = cur_pitch;
-  delay(1000); // Publish every second
+  delay(1000); // Slow down loop
 }
